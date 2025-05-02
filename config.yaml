@@ -17,7 +17,6 @@ system_settings:
     interactive: true
     quiet: false
     allow_sudo: true
-    simulate_before_apt: true
 ## BACKUP SETTINGS
 backup_settings:
   compress: false
