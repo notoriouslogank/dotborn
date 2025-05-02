@@ -4,6 +4,14 @@ All notable changes to **Dotborn** will be documented here.
 
 ---
 
+## [0.2.0] - 2025-05-02
+
+### Added
+
+- `template.py`: add module and function docstrings for clarity and readability
+- `linback.py`: add module and function docstrings for clarity and readability
+- `TODO.md`: add TODO.md with list of planned features and milestones
+
 ## [0.1.0] - 2025-05-02
 
 ### Initial Structured Release ("The Ritual Begins")
