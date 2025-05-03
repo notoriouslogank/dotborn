@@ -71,7 +71,7 @@ class Installer:
                 self.log.info(f"{pkg} is already installed; skipping.")
                 continue
 
-            if self.flags("dry_run", False):
+            if self.flags.get("dry_run", False):
                 print(f"[DRY RUN] Would install cargo package: {pkg}")
                 continue
 
