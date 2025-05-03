@@ -98,23 +98,23 @@ install_settings:
       - xplr
       - starship
     script:
-      oh-my-zsh:
-        install: curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh | sh
-        description: zsh framework
-      nerd_fonts:
-        install: # TODO: Write custom script
-        fonts:
-          - Mononoki
-          - Hack
-          - JetBrainsMono
-        description: Patched fonts for glyph-friendly terminals
-      gh:
-        install: #TODO: Write custom script
-        description: GitHub CLI
-      fzf:
-        install: git clone https://github.com/junegunn/fzf.git ~/.fzf && ~/.fzf/install --all
-        description: Command-line fuzzy finder
-    usr_scripts: [] # path/to/custom/script(s)
+      - oh-my-zsh:
+          install: curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh | sh
+          description: zsh framework
+      - nerd_fonts:
+          install: # TODO: Write custom script
+          fonts:
+            - Mononoki
+            - Hack
+            - JetBrainsMono
+          description: Patched fonts for glyph-friendly terminals
+      - gh:
+          install: #TODO: Write custom script
+          description: GitHub CLI
+      - fzf:
+          install: git clone https://github.com/junegunn/fzf.git ~/.fzf && ~/.fzf/install --all
+          description: Command-line fuzzy finder
+      - usr_scripts: [] # path/to/custom/script(s)
   dotfile_options:
     method: copy
     overwrite_existing: true
