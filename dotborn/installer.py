@@ -55,15 +55,13 @@ class Installer:
     def install_apt_packages(self):
         packages = self.config.get("install_settings", {}).get("installed_by", {}).get("apt", [])
         if not packages:
-            self.log.info(f"No APT packages to install.")
+            self._rich_status("apt", "No apt packages to install.", status="info")
             return
 
-        self.log.info(f"Found {len(packages)} apt packages to install.")
-
+        self._rich_status("apt", f"Found {len(packages)} apt packages to install.", status="info")
         if self.flags.get("dry_run", False):
-            print(f"[DRY RUN] Would run: apt update && apt install ...")
             for pkg in packages:
-                print(f" - {pkg}")
+                self._rich_status("apt", f"Would install: {pkg}", status="dry")
                 self._simulate_apt(pkg, allow_sudo=self.flags.get("allow_sudo", True))
             return
 
@@ -73,8 +71,13 @@ class Installer:
                 cmd = ["apt", "install", "-y", pkg]
                 if self.flags.get("quiet", False):
                     cmd.append("-qq")
-                self.log.info(f"Installing {pkg}...")
-                subprocess.run(["sudo"] + cmd if self.flags.get("allow_sudo", True) else cmd, check=True)
+                self._rich_status("apt", f"Installing {pkg}...", status="info")
+                try:
+                    subprocess.run(["sudo"] + cmd if self.flags.get("allow_sudo", True) else cmd, check=True)
+                    self._rich_status("apt", f"Successfully installed {pkg}", status="success")
+                except subprocess.CalledProcessError as e:
+                    self._rich_status("apt", f"Failed to install {pkg}: {e}", status="error")
+
 
     def _cargo_installed(self, pkg):
         try:
@@ -86,45 +89,52 @@ class Installer:
     def install_cargo_packages(self):
         packages = self.config.get("install_settings", {}).get("installed_by", {}).get("cargo", [])
         if not packages:
-            self.log.info(f"No Cargo packages to install.")
+            self._rich_status("Cargo", "No Cargo packages to install.", status="info")
             return
 
-        self.log.info(f"Found {len(packages)} cargo packages to install.")
+        self._rich_status("Cargo", f"Found {len(packages)} cargo packages to install.", status="info")
         for pkg in packages:
             if self._cargo_installed(pkg):
-                self.log.info(f"{pkg} is already installed; skipping.")
-                continue
+                self._rich_status("Cargo", f"{pkg} is already installed; skipping.", status="info")
 
             if self.flags.get("dry_run", False):
-                print(f"[DRY RUN] Would install cargo package: {pkg}")
+                self._rich_status("Cargo", f"Would install: {pkg}", status="dry")
                 continue
 
             if self._should_prompt(f"Install cargo package {pkg}?"):
                 cmd = ["cargo", "install", pkg]
-                self.log.info(f"Installing {pkg} via cargo...")
-                subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL if self.flags.get("quiet", False) else None)
+                self._rich_status("Cargo", f"Installing {pkg} via cargo...", status='info')
+                try:
+
+                    subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL if self.flags.get("quiet", False) else None)
+                    self._rich_status("Cargo", f"Successfully installed {pkg}", status="success")
+                except subprocess.CalledProcessError as e:
+                    self._rich_status("Cargo", f"Failed to install {pkg}: {e}", status="error")
 
     def install_script_packages(self):
         scripts = self.config.get("install_settings", {}).get("installed_by", {}).get("script", {})
         if not scripts:
-            self.log.info(f"No scripts found.")
+            self._rich_status("script", "No scripts found.", status="info")
             return
 
         for name, entry in scripts.items():
             cmd = entry.get("install")
             desc = entry.get("description", "")
             if not cmd or "# TODO" in str(cmd).lower():
-                self.log.info(f"Skipping '{name}' - no valid install script.")
+                self._rich_status("script", f"Skipping '{name}' - no valid install script.", status="info")
                 continue
 
             if self.flags.get(f"dry_run", False):
-                print(f"[DRY RUN] Would run install script for {name}: {cmd}")
+                self._rich_status(name, desc, cmd)
                 continue
 
             if self._should_prompt(f"Run install script for {name} ({desc})?"):
-                self.log.info(f"Installing {name}: {desc}")
-                subprocess.run(cmd, shell=True, check=True, stdout=subprocess.DEVNULL if self.flags.get("quiet", False) else None, stderr=subprocess.STDOUT if self.flags.get("quiet", False) else None)
-
+                self._rich_status(f"Run install for {name} ({desc})?")
+                try:
+                    subprocess.run(cmd, shell=True, check=True, stdout=subprocess.DEVNULL if self.flags.get("quiet", False) else None, stderr=subprocess.STDOUT if self.flags.get("quiet", False) else None)
+                    self._rich_status("script", f"Successfully ran install script for {name}", status="success")
+                except subprocess.CalledProcessError as e:
+                    self._rich_status("script", f"Script install for {name} failed: {e}", status="error")
 
 
 
