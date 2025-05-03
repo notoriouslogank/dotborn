@@ -52,33 +52,33 @@ class Installer:
                 self.log.info(f"Installing {pkg}...")
                 subprocess.run(["sudo"] + cmd if self.flags.get("allow_sudo", True) else cmd, check=True)
 
-        def _cargo_installed(self, pkg):
-            try:
-                output = subprocess.check_output(["cargo", "install", "--list"], text=True)
-                return pkg in output
-            except Exception:
-                return False
+    def _cargo_installed(self, pkg):
+        try:
+            output = subprocess.check_output(["cargo", "install", "--list"], text=True)
+            return pkg in output
+        except Exception:
+            return False
 
-        def install_cargo_packages(self):
-            packages = self.config.get("install_settings", {}).get("installed_by", {}).get("cargo", [])
-            if not packages:
-                self.log.info(f"No Cargo packages to install.")
-                return
+    def install_cargo_packages(self):
+        packages = self.config.get("install_settings", {}).get("installed_by", {}).get("cargo", [])
+        if not packages:
+            self.log.info(f"No Cargo packages to install.")
+            return
 
-            self.log.info(f"Found {len(packages)} cargo packages to install.")
-            for pkg in packages:
-                if self._cargo_installed(pkg):
-                    self.log.info(f"{pkg} is already installed; skipping.")
-                    continue
+        self.log.info(f"Found {len(packages)} cargo packages to install.")
+        for pkg in packages:
+            if self._cargo_installed(pkg):
+                self.log.info(f"{pkg} is already installed; skipping.")
+                continue
 
-                if self.flags("dry_run", False):
-                    print(f"[DRY RUN] Would install cargo package: {pkg}")
-                    continue
+            if self.flags("dry_run", False):
+                print(f"[DRY RUN] Would install cargo package: {pkg}")
+                continue
 
-                if self._should_prompt(f"Install cargo package {pkg}?"):
-                    cmd = ["cargo", "install", pkg]
-                    self.log.info(f"Installing {pkg} via cargo...")
-                    subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL if self.flags.get("quiet", False) else None)
+            if self._should_prompt(f"Install cargo package {pkg}?"):
+                cmd = ["cargo", "install", pkg]
+                self.log.info(f"Installing {pkg} via cargo...")
+                subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL if self.flags.get("quiet", False) else None)
 
     def install_script_packages(self):
         scripts = self.config.get("install_settings", {}).get("installed_by", {}).get("script", {})
