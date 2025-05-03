@@ -1,39 +1,42 @@
-from dotborn.version import get_version
-import sys # these lines are for DEV ONLY and should be
+import sys  # these lines are for DEV ONLY and should be
 from pathlib import Path
-sys.path.append(str(Path(__file__).parent.resolve()))           # fixed later per ChatGPT
-from dotborn import logger, paths, config, platform_check, linback
-from dotborn.installer import Installer
+
+from dotborn import config, linback, logger, paths, platform_check
+from dotborn.installer import AptInstaller, CargoInstaller, InstallManager
+from dotborn.version import get_version
+
+sys.path.append(
+        str(Path(
+            __file__
+            ).parent.resolve()))  # fixed later per ChatGPT
 
 log = logger.setup_logger(log_file=Path(paths.LOG_PATH))
 
 conf = config.load_config()
 
+
 def main():
-    log.debug(f"MAIN LOOP START")
-    print(f'Dotborn v{get_version()}')
+    log.debug(f"dotborn {get_version()}")
+
     platform = platform_check.check_platform()
 
+    log.debug(f"User platform: {platform}")
+
     if platform == "Windows":
-        print(f"Windows")
+        raise NotImplementedError
     if platform == "Linux":
-        #linback.run_backup()
-        install = Installer(conf)
-        install.install_apt_packages()
-        install.install_script_packages()
-        install.install_cargo_packages()
+        install_manager = InstallManager(conf)
+        # apt_installer = AptInstaller(
+        #    install_manager.apt_installs,
+        #    install_manager.flags)
+        cargo_installer = CargoInstaller(
+            install_manager.cargo_installs,
+            install_manager.flags)
+
+        # apt_installer.dry_run()
+        cargo_installer.dry_run()
     else:
-        print(f"Some sort of Godless heathen")
+        print("Some sort of Godless heathen")
 
-
-    # backup
-    #print(backup.copy_windows_credentials())
-    #print(backup.copy_windows_browser_data())
-    #print(backup.copy_windows_ect())
-    #make_tempdir()
-    # install
-    # dotfiles
-    # post-install
-    #pass
 
 main()
