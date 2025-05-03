@@ -2,7 +2,8 @@ import sys  # these lines are for DEV ONLY and should be
 from pathlib import Path
 
 from dotborn import config, linback, logger, paths, platform_check
-from dotborn.installer import AptInstaller, CargoInstaller, InstallManager
+from dotborn.installer import (AptInstaller, CargoInstaller, InstallManager,
+                               ScriptInstaller)
 from dotborn.version import get_version
 
 sys.path.append(
@@ -32,9 +33,12 @@ def main():
         cargo_installer = CargoInstaller(
             install_manager.cargo_installs,
             install_manager.flags)
-
+        script_installer = ScriptInstaller(
+            install_manager.script_installs, 
+            install_manager.flags)
         # apt_installer.dry_run()
-        cargo_installer.dry_run()
+        #cargo_installer.dry_run()
+        script_installer.dry_run()
     else:
         print("Some sort of Godless heathen")
 

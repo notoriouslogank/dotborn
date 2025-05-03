@@ -1,7 +1,8 @@
+import os
+import subprocess
+
 from dotborn.config import load_config
 from dotborn.logger import setup_logger
-import subprocess
-import os
 
 log = setup_logger()
 
@@ -9,7 +10,7 @@ class AptInstaller:
 
     apt_update_cmd = ["apt", "update", "-y"]
 
-    def __init__(self, packages:list, flags:list):
+    def __init__(self, packages, flags:list):
         self.packages = packages
         self.flags = flags
 
@@ -31,7 +32,7 @@ class AptInstaller:
             except subprocess.CalledProcessError as e:
                 log.error(f"{e}")
 
-    def dry_run(self):
+    def dry_run(self) -> tuple[list, list]:
         installed = []
         failed = []
 
@@ -65,7 +66,7 @@ class AptInstaller:
 
 class CargoInstaller:
 
-    def __init__(self, packages:list, flags:list):
+    def __init__(self, packages, flags:list):
         self.packages = packages
         self.flags = flags
 
@@ -104,13 +105,33 @@ class CargoInstaller:
 
 class ScriptInstaller:
 
-    def __init__(self, packages:list, flags:list):
+    def __init__(self, packages, flags:list):
         self.packages = packages
         self.flags = flags
 
-    def simulate_install(self):
-        pass
+    def dry_run(self):
+        installer_scripts = []
+        cmds = []
+        for package in self.packages:
+            for details in package.values():
+                if type(details) == dict:
+                    install_script = details.get('install')
+                    installer_scripts.append(install_script)
+                else:
+                    log.warning(f"Missing install script for {package}")
+        for script in installer_scripts:
+            if type(script) == str:
+                script_args = script.split(" ")
+                cmds.append(script_args)
+            else:
+                log.warning("type(script) must be str")
+        log.info(f"Found the following installation scripts: {cmds}")
+        return cmds
 
+
+
+    #                install_script = value.get('install')
+#                    log.debug(f"{install_script}")
     def install(self):
         pass
 
