@@ -1,6 +1,7 @@
 from dotborn.config import load_config
 from dotborn.logger import setup_logger
 import subprocess
+import os
 
 log = setup_logger()
 
@@ -68,9 +69,35 @@ class CargoInstaller:
         self.packages = packages
         self.flags = flags
 
-    def simulate_install(self):
+    def _check_current_installs(self):
+        currently_installed_packages = []
+        currently_installed_raw = subprocess.run(["cargo", "install", "--list"], capture_output=True, text=True)
+        currently_installed_lines = currently_installed_raw.stdout.splitlines()
+        for package in currently_installed_lines:
+            if not package.endswith(":"):
+                install = package.strip()
+                currently_installed_packages.append(install)
+        return currently_installed_packages
 
-        pass
+
+    def dry_run(self):
+        matches = []
+
+        currently_installed_packages = self._check_current_installs()
+
+        log.debug(f"Crate installation candidates: {self.packages}")
+        log.debug(f"Already installed crates: {currently_installed_packages}")
+        for package in self.packages:
+            if package in currently_installed_packages:
+                log.info(f"[DRY RUN] Already installed: {package}; skipping")
+            else:
+                search_results = subprocess.run(["cargo", "search", f"{package}"], capture_output=True, text=True)
+                search_result_lines = search_results.stdout.splitlines()
+                for line in search_result_lines:
+                    line = line.split("=")
+                    if line[0].startswith(package):
+                        log.info(f"Found install candidate for {package}: {line[1]}")
+                #log.info(f"[DRY RUN] Found crate to install {package}:\n{match}")
 
     def install(self):
         pass
@@ -96,11 +123,12 @@ class InstallManager:
         self.cargo_installs = self.config.get('install_settings', {}).get('installed_by', {}).get('cargo', [])
         self.script_installs = self.config.get('install_settings', {}).get('installed_by', {}).get('script', [])
 
-install_manager = InstallManager(load_config())
+def test_main():
+    install_manager = InstallManager(load_config())
+    apt_installer = AptInstaller(install_manager.apt_installs, install_manager.flags)
 
-apt_installer = AptInstaller(install_manager.apt_installs, install_manager.flags)
-
-dry_run = install_manager.flags.get('dry_run')
-
-installed, failed = apt_installer.dry_run()
-print(installed, failed)
+#install_manager = InstallManager(load_config())
+#apt_installer = AptInstaller(install_manager.##apt_installs, install_manager.flags)
+#dry_run = install_manager.flags.get('dry_run')
+#installed, failed = apt_installer.dry_run()
+#print(installed, failed)
