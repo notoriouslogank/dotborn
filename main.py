@@ -12,7 +12,6 @@ conf = config.load_config()
 def main():
     log.debug(f"MAIN LOOP START")
     print(f'Dotborn v{get_version()}')
-    exit()
     platform = platform_check.check_platform()
 
     if platform == "Windows":
