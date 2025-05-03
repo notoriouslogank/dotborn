@@ -1,13 +1,16 @@
 import subprocess
 from dotborn.logger import setup_logger
 from dotborn.config import load_config
-from rich import print
+from rich.console import Console
+from rich.text import Text
+from rich.panel import Panel
 
 class Installer:
     def __init__(self, config=None):
         self.log = setup_logger()
         self.config = config or load_config()
         self.flags = self.config.get('system_settings', {}).get("flags", {})
+        self.console = Console()
 
     def _should_prompt(self, prompt_msg:str) -> str:
         if not self.flags.get("interactive", True):
@@ -27,6 +30,27 @@ class Installer:
             return True
         except subprocess.CalledProcessError:
             return False
+
+    def _rich_status(self, prefix, message, status="info"):
+        colors = {
+            "info":"cyan",
+            "success":"green",
+            "warn":"yellow",
+            "error":"bold red",
+            "dry":"magenta"
+        }
+        tag = Text(f"[{prefix}] {message}", style=colors.get(status, "white"))
+        self.console.print(tag)
+        log_method = getattr(self.log, status if status in ("info", "warning", "error") else "info")
+        log_method(f"[{prefix}] {message}")
+
+    def _rich_script_dry_run(self, name, desc, cmd):
+        self.console.print(Panel.fit(
+            f"[bold magenta]{name}[/bold magenta]\n",
+            f"[cyan]Description:[/cyan] {desc}\n",
+            f"[yellow]Command:[/yellow] {cmd}",
+            title="DRY RUN: Script Install", border_style='magenta'
+        ))
 
     def install_apt_packages(self):
         packages = self.config.get("install_settings", {}).get("installed_by", {}).get("apt", [])
