@@ -2,7 +2,7 @@ import sys
 from pathlib import Path
 
 from dotborn import logger, platform_check
-from dotborn.backupper import BackupManager, WinBack, LinBack
+from dotborn.backupper import WinBack, LinBack
 from dotborn.installer import (
     AptInstaller,
     CargoInstaller,
@@ -23,16 +23,14 @@ def main():
     log.debug(f"dotborn {get_version()}")
 
     platform = platform_check.check_platform()
-    winback = WinBack(configs.backup_config)
-    linback = LinBack(configs.backup_config)
 
     log.debug(f"User platform: {platform}")
 
 
     if platform == "Windows":
-        winback.backup()
+        WinBack(configs.backup_config).run_backup()
     if platform == "Linux":
-        linback.backup()
+        LinBack(configs.backup_config).run_backup()
 
 
         install_manager = InstallManager(configs.user_config, configs.install_config)
