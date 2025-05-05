@@ -10,17 +10,18 @@ backup_settings:
         encrypt_backup: false
       targets:
         browser_data:
+          - "~/Mozilla/Firefox/Profiles"
         credentials:
-          - "%USERPROFILE%/.ssh/id_rsa"
+          - "~/.ssh/id_rsa"
         dotfiles:
-          - "%USERPROFILE%/.bashrc"
-          - "%USERPROFILE%/.wslconfig"
-          - "%USERPROFILE%/.gitconfig"
-          - "%USERPROFILE%/.gitignore_global"
-          - "%USERPROFILE%/.ssh/config"
+          - "~/.bashrc"
+          - "~/.wslconfig"
+          - "~/.gitconfig"
+          - "~/.gitignore_global"
+          - "~/.ssh/config"
         configs:
           - "%APPDATA%/Code/User/settings.json"
-          - "%USERPROFILE%/.vscode/"
+          - "~/.vscode/"
         sysfiles:
           - None
         usr_dirs:
