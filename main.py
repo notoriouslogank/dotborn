@@ -2,6 +2,7 @@ import sys  # these lines are for DEV ONLY and should be
 from pathlib import Path
 
 from dotborn import linback, logger, platform_check
+from dotborn.backupper import BackupManager, WinBack
 from dotborn.installer import (AptInstaller, CargoInstaller, InstallManager,
                                ScriptInstaller)
 from dotborn.version import get_version
@@ -24,7 +25,10 @@ def main():
     log.debug(f"User platform: {platform}")
 
     if platform == "Windows":
-        raise NotImplementedError
+        backup_manager = BackupManager(configs.user_config, configs.backup_config)
+        winconfigs = backup_manager.prepare_windows()
+        winback = WinBack(winconfigs)
+        winback.backup()
     if platform == "Linux":
         install_manager = InstallManager(configs.user_config, configs.install_config)
         apt_installer = AptInstaller(
