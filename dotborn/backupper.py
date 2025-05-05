@@ -11,11 +11,11 @@ log = setup_logger()
 
 
 def write_manifest(manifest_data:dict, output_path:Path):
-    """Write manifest of backed-up files
+    """Write a JSON manifest detailing backed-up files and their destinations.
 
     Args:
-        manifest_data (dict): Dictionary containing the list(s) of files backed up
-        output_path (Path): Destination path for dotborn_manifest.json
+        manifest_data (dict): Mapping of backup categories to copied file metadata.
+        output_path (Path): Destination path for `dotborn_manifest.json`.
     """
     try:
         with open(output_path, "w") as f:
@@ -70,7 +70,7 @@ class BackupManager:
             tuple: A 7-element tuple containing:
                 - backup_name (str): Name for the output backed-up directory.
                 - output_dir (Path): Destination path for the output backup
-                - include_prive_keys (bool): Whether to copy private keys
+                - include_private_keys (bool): Whether to copy private keys
                 - compress (bool): Whether or not to compress the output backup archive
                 - output_tarball (bool): Whether or not to archive the backup as a .tar.gz
                 - encrypt_backup (bool): Whether or not to encrypt the output archive
@@ -102,7 +102,7 @@ class BackupManager:
             tuple: A 7-element tuple containing:
                 - backup_name (str): Name for the output backed-up directory.
                 - output_dir (Path): Destination path for the output backup
-                - include_prive_keys (bool): Whether to copy private keys
+                - include_private_keys (bool): Whether to copy private keys
                 - compress (bool): Whether or not to compress the output backup archive
                 - output_tarball (bool): Whether or not to archive the backup as a .tar.gz
                 - encrypt_backup (bool): Whether or not to encrypt the output archive
@@ -158,7 +158,7 @@ class LinBack:
         """Create a hierarchy of empty directories inside a temp file
 
         Args:
-            staging_dir (Path[tempfile.TemporaryDirectory]): Destination path to create directory tree
+            staging_dir (Path): Destination path to create directory tree
 
         Returns:
             dict: The directory names and file paths as a key:value pair
@@ -216,7 +216,9 @@ class LinBack:
         return results
 
     def backup(self):
-        """
+        """Run the Linux backup process.
+
+        This method stages files in a temporary directory based on configuration targets, writes a manifest, and either compresses the output or copies it to the final backup location.
         """
         backup_root = Path(f"{self.output_dir}")
         backup_root = backup_root.expanduser().resolve()
@@ -290,7 +292,7 @@ class WinBack:
             self.targets,
         ) = winconfigs
 
-    def create_empty_backup_dirs(self):
+    def create_empty_backup_dirs(self, staging_dir:Path):
         """Create a hierarchy of empty directories inside a temp file
 
         Args:
@@ -300,7 +302,7 @@ class WinBack:
             dict: The directory names and file paths as a key:value pair
         """
         log.debug(f"Making backup directories...")
-        base_dir = Path(self.output_dir / self.backup_name).expanduser().resolve()
+        base_dir = Path(staging_dir)
         browser_data = base_dir / "browser_data"
         credentials = base_dir / "credentials"
         dotfiles = base_dir / "dotfiles"
