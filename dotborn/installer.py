@@ -1,7 +1,6 @@
 import os
 import subprocess
 
-from dotborn.config import load_config
 from dotborn.logger import setup_logger
 
 log = setup_logger()
@@ -82,8 +81,6 @@ class CargoInstaller:
 
 
     def dry_run(self):
-        matches = []
-
         currently_installed_packages = self._check_current_installs()
 
         log.debug(f"Crate installation candidates: {self.packages}")
@@ -137,9 +134,9 @@ class ScriptInstaller:
 
 class InstallManager:
 
-    def __init__(self, config):
-        self.config = config or load_config()
-        self.flags = self.config.get("system_settings", {}).get("flags")
-        self.apt_installs = self.config.get('install_settings', {}).get('installed_by', {}).get('apt', [])
-        self.cargo_installs = self.config.get('install_settings', {}).get('installed_by', {}).get('cargo', [])
-        self.script_installs = self.config.get('install_settings', {}).get('installed_by', {}).get('script', [])
+    def __init__(self, user_config:dict, install_config:dict):
+        self.flags = user_config.get('system_settings', {}).get('flags', {})
+        self.method = install_config.get('install_settings', {}).get('method')
+        self.apt_list = install_config.get('install_settings', {}).get('installed_by', {}).get('apt', [])
+        self.cargo_list = install_config.get('install_settings', {}).get('installed_by', {}).get('cargo', [])
+        self.script_list = install_config.get('install_settings', {}).get('installed_by', {}).get('script', [])
