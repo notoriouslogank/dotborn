@@ -4,9 +4,6 @@
 system_settings:
   username: logank
   home_dir: /home/logank
-  backup_dir: /home/logank/dotborn_backups # TODO: Make this and home_dir easier to work with
-  encrypt_backup: false
-  include_private_keys: false
   logging:
     level: info
     log_to_file: true
@@ -19,9 +16,12 @@ system_settings:
     allow_sudo: true
 ## BACKUP SETTINGS
 backup_settings:
+  backup_dir: /home/logank/dotborn_backups # TODO: Make this and home_dir easier to work with
   compress: false
+  include_private_keys: false
   output_tarball: false
   tarball_name: dotborn_backup.tar.gz
+  encrypt_backup: false
   backup_targets:
     windows:
       enabled: false
