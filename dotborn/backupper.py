@@ -292,7 +292,7 @@ class WinBack:
             self.targets,
         ) = winconfigs
 
-    def create_empty_backup_dirs(self):
+    def create_empty_backup_dirs(self, staging_dir:Path):
         """Create a hierarchy of empty directories inside a temp file
 
         Args:
@@ -302,7 +302,7 @@ class WinBack:
             dict: The directory names and file paths as a key:value pair
         """
         log.debug(f"Making backup directories...")
-        base_dir = Path(self.output_dir / self.backup_name).expanduser().resolve()
+        base_dir = Path(staging_dir).expanduser().resolve()
         browser_data = base_dir / "browser_data"
         credentials = base_dir / "credentials"
         dotfiles = base_dir / "dotfiles"
