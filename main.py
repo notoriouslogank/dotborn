@@ -37,19 +37,19 @@ def main():
         linback = LinBack(linconfigs)
         linback.backup()
 
-    #        install_manager = InstallManager(configs.user_config, configs.install_config)
-    #        apt_installer = AptInstaller(
-    #        install_manager.apt_list,
-    #        install_manager.flags)
-    #        cargo_installer = CargoInstaller(
-    #            install_manager.cargo_list,
-    #            install_manager.flags)
-    #        script_installer = ScriptInstaller(
-    #            install_manager.script_list,
-    #            install_manager.flags)
-    #        apt_installer.dry_run()
-    #        cargo_installer.dry_run()
-    #        script_installer.dry_run()
+        install_manager = InstallManager(configs.user_config, configs.install_config)
+        apt_installer = AptInstaller(
+            install_manager.apt_list,
+            install_manager.flags)
+        cargo_installer = CargoInstaller(
+                install_manager.cargo_list,
+                install_manager.flags)
+        script_installer = ScriptInstaller(
+                install_manager.script_list,
+                install_manager.flags)
+        apt_installer.dry_run()
+        cargo_installer.dry_run()
+        script_installer.dry_run()
     else:
         log.debug(f"Unsupported platform: {platform}")
 
