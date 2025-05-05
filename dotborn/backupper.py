@@ -11,8 +11,6 @@ from dotborn.hash import hash_file
 
 log = setup_logger()
 
-user_configs = Configure().load_user_config()
-backup_configs = Configure().load_backup_config()
 
 def write_manifest(manifest_data, output_path):
     try:
@@ -26,7 +24,7 @@ class BackupManager:
 
     def __init__(self, usr_configs:dict, backup_configs:dict):
         log.info(f"Getting backup configs...")
-        self.backup_configs = backup_configs
+        self.backup_configs = backup_configs.get('backup_settings', {})
         self.usr_configs = usr_configs
         self.windows_configs = self.backup_configs.get('platform', {}).get('windows', {})
         self.linux_configs = self.backup_configs.get("platform", {}).get('linux', {})
@@ -44,12 +42,12 @@ class BackupManager:
 
     def prepare_linux(self):
         backup_name = self.linux_configs.get('backup_name')
-        output_dir = Path(self.linux_configs.get('output_dir').expanduser().resolve())
+        output_dir = self.linux_configs.get('output_dir')
         include_private_keys = self.linux_configs.get('flags', {}).get('include_private_keys')
         compress = self.linux_configs.get('flags', {}).get('compress')
         output_tarball = self.linux_configs.get('flags', {}).get('output_tarball')
         encrypt_backup = self.linux_configs.get('flags', {}).get('encrypt_backup')
-        targets = self.linux_configs.get('targets', {}).get('targets', {})
+        targets = self.linux_configs.get('targets', {})
         return backup_name, output_dir, include_private_keys, compress, output_tarball, encrypt_backup, targets
 
 class LinBack:
@@ -57,9 +55,10 @@ class LinBack:
     def __init__(self, linconfigs:tuple):
         self.backup_name, self.output_dir, self.include_private_keys, self.compress, self.output_tarball, self.encrypt_backup, self.targets = linconfigs
 
-    def create_empty_backup_dirs(self):
+    def create_empty_backup_dirs(self, staging_dir):
         log.debug(f"Making backup directories...")
-        base_dir = Path(self.output_dir/self.backup_name).expanduser().resolve()
+        base_dir = Path(staging_dir)
+        print(base_dir)
         browser_data = base_dir/"browser_data"
         credentials = base_dir/"credentials"
         dotfiles = base_dir/"dotfiles"
@@ -100,17 +99,20 @@ class LinBack:
         return archive_path
 
     def backup(self):
-        backup_root = Path(self.output_dir/self.backup_name).expanduser().resolve()
+        backup_root = Path(f"{self.output_dir}")
+        backup_root = backup_root.expanduser().resolve()
+        print(backup_root)
         with tempfile.TemporaryDirectory() as tmpdir:
             staging_dir = Path(tmpdir)
             subdirs = self.create_empty_backup_dirs(staging_dir)
-
+            browser_data = self.targets.get('browser_data', [])
             credentials = self.targets.get('credentials', [])
             configs = self.targets.get('configs', [])
             dotfiles = self.targets.get('dotfiles', [])
             sysfiles = self.targets.get('sysfiles', [])
             usr_dirs = self.targets.get('usr_dirs', [])
 
+            copied_browser_data = self.copy_items(browser_data, subdirs['browser_data'], 'browser_data')
             copied_credentials = self.copy_items(credentials, subdirs['credentials'], 'credential')
             copied_configs = self.copy_items(configs, subdirs['configs'], 'config')
             copied_dotfiles = self.copy_items(dotfiles, subdirs['dotfiles'], 'dotfile')
@@ -119,6 +121,7 @@ class LinBack:
 
             manifest = {
                 "timestamp": datetime.datetime.now().isoformat(),
+                "broswer_data": copied_browser_data,
                 "credentials": copied_credentials,
                 "configs": copied_configs,
                 "sysfiles": copied_sysfiles,
@@ -191,12 +194,14 @@ class WinBack:
             staging_dir = Path(tmpdir)
             subdirs = self.create_empty_backup_dirs(staging_dir)
 
+            browser_data = self.targets.get('browser_data', [])
             credentials = self.targets.get('credentials', [])
             configs = self.targets.get('configs', [])
             dotfiles = self.targets.get('dotfiles', [])
             sysfiles = self.targets.get('sysfiles', [])
             usr_dirs = self.targets.get('usr_dirs', [])
 
+            copied_browser_data = self.copy_items(browser_data, subdirs['browser_data'], 'browser_data')
             copied_credentials = self.copy_items(credentials, subdirs['credentials'], 'credential')
             copied_configs = self.copy_items(configs, subdirs['configs'], 'config')
             copied_sysfiles = self.copy_items(sysfiles, subdirs['sysfiles'], 'system file')
@@ -206,6 +211,7 @@ class WinBack:
 
             manifest = {
                 "timestamp": datetime.datetime.now().isoformat(),
+                "browser_data": copied_browser_data,
                 "credentials": copied_credentials,
                 "configs": copied_configs,
                 "sysfiles": copied_sysfiles,

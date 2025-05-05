@@ -23,7 +23,6 @@ def main():
     platform = platform_check.check_platform()
 
     log.debug(f"User platform: {platform}")
-
     backup_manager = BackupManager(configs.user_config, configs.backup_config)
 
 
@@ -33,6 +32,7 @@ def main():
         winback.backup()
     if platform == "Linux":
         linconfigs = backup_manager.prepare_linux()
+        #print(linconfigs)
         linback = LinBack(linconfigs)
         linback.backup()
 

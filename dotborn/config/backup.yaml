@@ -30,9 +30,9 @@ backup_settings:
       output_dir: "~"
       flags:
         include_private_keys: false
-        compress: false
-        output_tarball: false
-        encrypt_backup: false
+        compress: true
+        output_tarball: true
+        encrypt_backup: true
       targets:
         browser_data:
           - ~/.mozilla/firefox
@@ -43,12 +43,11 @@ backup_settings:
           - ~/.gitconfig
           - ~/.tmux.conf
           - ~/.zshrc
-        configfiles:
+        configs:
           - ~/.config/bat
           - ~/.config/htop
           - ~/.config/nvim
           - ~/.config/neofetch
-          - ~/.config/ranger
           - ~/.gh
           - ~/.oh-my-zsh/themes/mimir.zsh-theme
         sysfiles:
