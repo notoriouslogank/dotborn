@@ -27,20 +27,20 @@ def main():
         raise NotImplementedError
     if platform == "Linux":
         install_manager = InstallManager(conf)
-        # apt_installer = AptInstaller(
-        #    install_manager.apt_installs,
-        #    install_manager.flags)
+        apt_installer = AptInstaller(
+        install_manager.apt_installs,
+        install_manager.flags)
         cargo_installer = CargoInstaller(
             install_manager.cargo_installs,
             install_manager.flags)
         script_installer = ScriptInstaller(
-            install_manager.script_installs, 
+            install_manager.script_installs,
             install_manager.flags)
-        # apt_installer.dry_run()
-        #cargo_installer.dry_run()
+        apt_installer.dry_run()
+        cargo_installer.dry_run()
         script_installer.dry_run()
     else:
-        print("Some sort of Godless heathen")
+        log.debug(f"Unsupported platform: {platform}")
 
 
 main()
