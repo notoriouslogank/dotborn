@@ -332,7 +332,7 @@ class WinBack:
             list[dict]: A list of dictionaries containing the source, destination, and hash of the copied file
         """
         results = []
-
+        print(items)
         for item in items:
             if item == None:
                 print("None item")
