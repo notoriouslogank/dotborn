@@ -1,14 +1,15 @@
 backup_settings:
   platform:
     windows:
+      backup_name: dotborn_windows_backup
+      output_dir: "%USERPROFILE%"
       flags:
-        backup_name: dotborn_windows_backup
-        output_dir: "%USERPROFILE%"
         include_private_keys: false
         compress: false
         output_tarball: false
         encrypt_backup: false
       targets:
+        browser_data:
         credentials:
           - "%USERPROFILE%/.ssh/id*"
         dotfiles:
@@ -17,7 +18,7 @@ backup_settings:
           - "%USERPROFILE%/.gitconfig"
           - "%USERPROFILE%/.gitignore_global"
           - "%USERPROFILE%/.ssh/config"
-        configfiles:
+        configs:
           - "%APPDATA%/Code/User/settings.json"
           - "%USERPROFILE%/.vscode/"
         sysfiles:
