@@ -1,4 +1,4 @@
-from typing import Tuple, Optional, Dict
+from typing import Tuple, Dict
 from pathlib import Path
 import shutil
 import tempfile
