@@ -154,7 +154,7 @@ class LinBack:
             self.targets,
         ) = linconfigs
 
-    def create_empty_backup_dirs(self, staging_dir:Path[tempfile.TemporaryDirectory]) -> dict:
+    def create_empty_backup_dirs(self, staging_dir:Path) -> dict:
         """Create a hierarchy of empty directories inside a temp file
 
         Args:
@@ -165,7 +165,7 @@ class LinBack:
         """
         log.debug(f"Making backup directories...")
         base_dir = Path(staging_dir)
-        print(base_dir)
+
         browser_data = base_dir / "browser_data"
         credentials = base_dir / "credentials"
         dotfiles = base_dir / "dotfiles"

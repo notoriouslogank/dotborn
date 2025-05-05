@@ -3,9 +3,6 @@ import yaml
 from dotborn import logger
 from pathlib import Path
 
-log = logger.setup_logger()
-
-
 class Configure:
     def __init__(self):
         self.PROJECT_ROOT = Path(__file__).resolve().parents[1]
