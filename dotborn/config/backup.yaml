@@ -1,0 +1,7 @@
+backup_settings:
+  backup_dir: "~"
+  compress: true
+  include_private_keys: false
+  output_tarball: true
+  tarball_name: 'dotborn_backup.tar.gz'
+  encrypt_backup: false
