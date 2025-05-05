@@ -30,10 +30,10 @@ backup_settings:
       backup_name: dotborn_linux_backup
       output_dir: "~"
       flags:
-        include_private_keys: false
-        compress: true
-        output_tarball: true
-        encrypt_backup: true
+        include_private_keys: true
+        compress: false
+        output_tarball: false
+        encrypt_backup: false
       targets:
         browser_data:
           - ~/.mozilla/firefox
