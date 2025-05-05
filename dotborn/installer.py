@@ -143,13 +143,3 @@ class InstallManager:
         self.apt_installs = self.config.get('install_settings', {}).get('installed_by', {}).get('apt', [])
         self.cargo_installs = self.config.get('install_settings', {}).get('installed_by', {}).get('cargo', [])
         self.script_installs = self.config.get('install_settings', {}).get('installed_by', {}).get('script', [])
-
-def test_main():
-    install_manager = InstallManager(load_config())
-    apt_installer = AptInstaller(install_manager.apt_installs, install_manager.flags)
-
-#install_manager = InstallManager(load_config())
-#apt_installer = AptInstaller(install_manager.##apt_installs, install_manager.flags)
-#dry_run = install_manager.flags.get('dry_run')
-#installed, failed = apt_installer.dry_run()
-#print(installed, failed)
