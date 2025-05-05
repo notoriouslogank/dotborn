@@ -332,25 +332,27 @@ class WinBack:
             list[dict]: A list of dictionaries containing the source, destination, and hash of the copied file
         """
         results = []
+
         for item in items:
-            raw = Path(item)
-            src = raw.expanduser().resolve()
-            if not src.exists():
-                log.warning(f"{item_type} not found: {src}")
-                continue
-            try:
-                dst = Path(dest_dir, src.name)
-                if src.is_dir():
-                    shutil.copytree(src, dst, dirs_exist_ok=True)
-                else:
-                    shutil.copy2(src, dst)
-                file_hash = hash_file(dst) if dst.is_file() else None
-                results.append(
-                    {"source": str(src), "dest": str(dst), "hash": file_hash}
-                )
-                log.info(f"Copied {item_type}: {src} -> {dst}")
-            except Exception as e:
-                log.error(f"Failed to copy {item_type}: {src} - {e}")
+            if item != None:
+                raw = Path(item)
+                src = raw.expanduser().resolve()
+                if not src.exists():
+                    log.warning(f"{item_type} not found: {src}")
+                    continue
+                try:
+                    dst = Path(dest_dir, src.name)
+                    if src.is_dir():
+                        shutil.copytree(src, dst, dirs_exist_ok=True)
+                    else:
+                        shutil.copy2(src, dst)
+                    file_hash = hash_file(dst) if dst.is_file() else None
+                    results.append(
+                        {"source": str(src), "dest": str(dst), "hash": file_hash}
+                    )
+                    log.info(f"Copied {item_type}: {src} -> {dst}")
+                except Exception as e:
+                    log.error(f"Failed to copy {item_type}: {src} - {e}")
         return results
 
     def backup(self) -> str:
