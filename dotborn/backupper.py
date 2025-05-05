@@ -1,3 +1,4 @@
+from typing import Tuple, Optional, Dict
 from pathlib import Path
 import shutil
 import tempfile
@@ -9,7 +10,13 @@ from dotborn.hash import hash_file
 log = setup_logger()
 
 
-def write_manifest(manifest_data, output_path):
+def write_manifest(manifest_data:dict, output_path:Path):
+    """Write manifest of backed-up files
+
+    Args:
+        manifest_data (dict): Dictionary containing the list(s) of files backed up
+        output_path (Path): Destination path for dotborn_manifest.json
+    """
     try:
         with open(output_path, "w") as f:
             json.dump(manifest_data, f, indent=2)
@@ -17,8 +24,36 @@ def write_manifest(manifest_data, output_path):
     except Exception as e:
         log.error(f"Failed to write manifest: {e}")
 
+def compress_backup(src:Path, dest:Path, backup_name:str) -> str:
+    """Compress a directory and return the compressed file
+
+    Args:
+        src (Path): Directory to compress
+        dest (Path): Destination to output compressed archive
+        backup_name (str): Name for the output archive
+
+    Returns:
+        str: Path to the resultant compressed archive
+    """
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M")
+    archive_name = f"{dest}/{backup_name}_{timestamp}"
+    archive_path = shutil.make_archive(str(archive_name), "gztar", root_dir=src)
+    log.info(f"Compressed backup to {archive_path}")
+    return archive_path
+
 
 class BackupManager:
+    """Represents a collection of configuration settings for backup utility.
+
+    This class manages dictionaries of usr_configs and backup_configs (config/user.yaml, config/backup.yaml). It provides easy access to necessary configuration variables.
+
+    Attributes:
+        backup_configs (dict): A dictionary of configuration settings
+        usr_configs (dict): A dictionary of system-wide user configuration settings
+        windows_configs (dict): A dictionary containing the Windows-specific subset of configurations from backup_configs
+        linux_configs (dict): A dictionary containing the Linux-specific subset of configurations from backup_configs
+    """
+
     def __init__(self, usr_configs: dict, backup_configs: dict):
         log.info(f"Getting backup configs...")
         self.backup_configs = backup_configs.get("backup_settings", {})
@@ -28,7 +63,19 @@ class BackupManager:
         )
         self.linux_configs = self.backup_configs.get("platform", {}).get("linux", {})
 
-    def prepare_windows(self):
+    def prepare_windows(self) -> Tuple[str, Path, bool, bool, bool, bool, Dict]:
+        """Parse the backup config file and return Windows-specific settings.
+
+        Returns:
+            tuple: A 7-element tuple containing:
+                - backup_name (str): Name for the output backed-up directory.
+                - output_dir (Path): Destination path for the output backup
+                - include_prive_keys (bool): Whether to copy private keys
+                - compress (bool): Whether or not to compress the output backup archive
+                - output_tarball (bool): Whether or not to archive the backup as a .tar.gz
+                - encrypt_backup (bool): Whether or not to encrypt the output archive
+                - targets (dict): Dictionary containing the paths/files to be backed up
+        """
         backup_name = self.windows_configs.get("backup_name")
         output_dir = Path(self.windows_configs.get("output_dir").expanduser().resolve())
         include_private_keys = self.windows_configs.get("flags", {}).get(
@@ -49,6 +96,18 @@ class BackupManager:
         )
 
     def prepare_linux(self):
+        """Parse the backup config file and return Linux-specific settings.
+
+        Returns:
+            tuple: A 7-element tuple containing:
+                - backup_name (str): Name for the output backed-up directory.
+                - output_dir (Path): Destination path for the output backup
+                - include_prive_keys (bool): Whether to copy private keys
+                - compress (bool): Whether or not to compress the output backup archive
+                - output_tarball (bool): Whether or not to archive the backup as a .tar.gz
+                - encrypt_backup (bool): Whether or not to encrypt the output archive
+                - targets (dict): Dictionary containing the paths/files to be backed up
+        """
         backup_name = self.linux_configs.get("backup_name")
         output_dir = self.linux_configs.get("output_dir")
         include_private_keys = self.linux_configs.get("flags", {}).get(
@@ -70,6 +129,20 @@ class BackupManager:
 
 
 class LinBack:
+    """Represents a collection of Linux-specific configurations regarding backups.
+
+    This class handles copying, moving, naming, hashing, and otherwise handling backed up system files.
+
+    Attributes:
+        backup_name (str): The name for the backup archive
+        output_dir (Path): Path to write the output directory
+        include_private_keys (bool): Whether or not to backup private key files
+        compress (bool): Whether or not to compress the backup to an archive
+        output_tarball (bool): Whether or not to output the backup as a 'tar.gz' archive
+        encrypt_backup (bool): Whether or not to encrypt the output backup archive
+        targets (dict): Dictionary containing a list of dirs and files to be backed up on the Linux system
+    """
+
     def __init__(self, linconfigs: tuple):
         (
             self.backup_name,
@@ -81,7 +154,15 @@ class LinBack:
             self.targets,
         ) = linconfigs
 
-    def create_empty_backup_dirs(self, staging_dir):
+    def create_empty_backup_dirs(self, staging_dir:Path[tempfile.TemporaryDirectory]) -> dict:
+        """Create a hierarchy of empty directories inside a temp file
+
+        Args:
+            staging_dir (Path[tempfile.TemporaryDirectory]): Destination path to create directory tree
+
+        Returns:
+            dict: The directory names and file paths as a key:value pair
+        """
         log.debug(f"Making backup directories...")
         base_dir = Path(staging_dir)
         print(base_dir)
@@ -102,7 +183,17 @@ class LinBack:
             "usr_dirs": usr_dirs,
         }
 
-    def copy_items(self, items: list, dest_dir: Path, item_type: str):
+    def copy_items(self, items: list, dest_dir: Path, item_type: str) -> list[dict]:
+        """Copy each individual item in the item list to the destination directory and note its' type; return a list of all items copied.
+
+        Args:
+            items (list): List of items to copy
+            dest_dir (Path): The destination directory for each copy
+            item_type (str): The type of each item copied
+
+        Returns:
+            list[dict]: A list of dictionaries containing the source, destination, and hash of the copied file
+        """
         results = []
         for item in items:
             src = Path(item).expanduser().resolve()
@@ -124,14 +215,9 @@ class LinBack:
                 log.error(f"Failed to copy {item_type}: {src} - {e}")
         return results
 
-    def compress_backup(self, src: Path, dest: Path):
-        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M")
-        archive_name = f"{dest}/{self.backup_name}_{timestamp}"
-        archive_path = shutil.make_archive(str(archive_name), "gztar", root_dir=src)
-        log.info(f"Compressed backup to {archive_path}")
-        return archive_path
-
     def backup(self):
+        """
+        """
         backup_root = Path(f"{self.output_dir}")
         backup_root = backup_root.expanduser().resolve()
         print(backup_root)
@@ -170,7 +256,7 @@ class LinBack:
             write_manifest(manifest, manifest_path)
 
             if self.compress and self.output_tarball:
-                self.compress_backup(staging_dir, backup_root)
+                compress_backup(staging_dir, backup_root, self.backup_name)
             else:
                 final_backup = (
                     Path(backup_root / self.backup_name).expanduser().resolve()
@@ -180,6 +266,19 @@ class LinBack:
 
 
 class WinBack:
+    """Represents a collection of Windows-specific configurations regarding backups.
+
+    This class handles copying, moving, naming, hashing, and otherwise handling backed up system files.
+
+    Attributes:
+        backup_name (str): The name for the backup archive
+        output_dir (Path): Path to write the output directory
+        include_private_keys (bool): Whether or not to backup private key files
+        compress (bool): Whether or not to compress the backup to an archive
+        output_tarball (bool): Whether or not to output the backup as a 'tar.gz' archive
+        encrypt_backup (bool): Whether or not to encrypt the output backup archive
+        targets (dict): Dictionary containing a list of dirs and files to be backed up on the Windows system
+    """
     def __init__(self, winconfigs: tuple):
         (
             self.backup_name,
@@ -192,6 +291,14 @@ class WinBack:
         ) = winconfigs
 
     def create_empty_backup_dirs(self):
+        """Create a hierarchy of empty directories inside a temp file
+
+        Args:
+            staging_dir (Path[tempfile.TemporaryDirectory]): Destination path to create directory tree
+
+        Returns:
+            dict: The directory names and file paths as a key:value pair
+        """
         log.debug(f"Making backup directories...")
         base_dir = Path(self.output_dir / self.backup_name).expanduser().resolve()
         browser_data = base_dir / "browser_data"
@@ -212,6 +319,16 @@ class WinBack:
         }
 
     def copy_items(self, items: list, dest_dir: Path, item_type: str):
+        """Copy each individual item in the item list to the destination directory and note its' type; return a list of all items copied.
+
+        Args:
+            items (list): List of items to copy
+            dest_dir (Path): The destination directory for each copy
+            item_type (str): The type of each item copied
+
+        Returns:
+            list[dict]: A list of dictionaries containing the source, destination, and hash of the copied file
+        """
         results = []
         for item in items:
             raw = Path(item)
@@ -234,14 +351,12 @@ class WinBack:
                 log.error(f"Failed to copy {item_type}: {src} - {e}")
         return results
 
-    def compress_backup(self, src: Path, dest: Path):
-        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M")
-        archive_name = f"{dest}/{self.backup_name}_{timestamp}"
-        archive_path = shutil.make_archive(str(archive_name), "gztar", root_dir=src)
-        log.info(f"Compressed backup to {archive_path}")
-        return archive_path
+    def backup(self) -> str:
+        """Run the backup utility, copying all files and directories in the configuration file(s) and return the resultant backup file as a string
 
-    def backup(self):
+        Returns:
+            str: String representing the file path to the resultant backup
+        """
         backup_root = Path(self.output_dir / self.backup_name).expanduser().resolve()
         with tempfile.TemporaryDirectory() as tmpdir:
             staging_dir = Path(tmpdir)
@@ -281,10 +396,13 @@ class WinBack:
             write_manifest(manifest, manifest_path)
 
             if self.compress and self.output_tarball:
-                self.compress_backup(staging_dir, backup_root)
+                final_backup = compress_backup(staging_dir, backup_root, self.backup_name)
+                log.info(f'Backup compressed and archived at: {final_backup}')
             else:
                 final_backup = (
                     Path(backup_root / self.backup_name).expanduser().resolve()
                 )
                 shutil.copytree(staging_dir, final_backup, dirs_exist_ok=True)
                 log.info(f"Backup copied to {final_backup}")
+            return(str(final_backup))
+
