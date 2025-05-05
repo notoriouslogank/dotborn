@@ -5,10 +5,10 @@ import tempfile
 import datetime
 import json
 import os
-#from dotborn.logger import setup_logger
-from config import Configure
+from dotborn.logger import setup_logger
+from dotborn.config import Configure
 
-#log = setup_logger()
+log = setup_logger()
 
 user_configs = Configure().load_user_config()
 backup_configs = Configure().load_backup_config()
@@ -16,14 +16,135 @@ backup_configs = Configure().load_backup_config()
 class BackupManager:
 
     def __init__(self, usr_configs:dict, backup_configs:dict):
-        self.backup_dir = backup_configs.get('backup_settings', {}).get('backup_dir')
-        self.compress = backup_configs.get('backup_settings', {}).get('compress')
-        self.include_private_keys = backup_configs.get('backup_settings', {}).get('include_private_keys')
-        self.output_tarball = backup_configs.get('backup_settings', {}).get('output_tarball')
-        self.tarball_name = backup_configs.get('backup_settings', {}).get('tarball_name')
-        self.encrypt_backup = backup_configs.get('backup_settings', {}).get('encrypt_backup')
-        self.flags = usr_configs.get('system_settings', {}).get('flags', {})
+        log.info(f"Getting backup configs...")
+        self.backup_configs = backup_configs
+        self.usr_configs = usr_configs
+        self.windows_configs = self.backup_configs.get('platform', {}).get('windows', {})
+        self.linux_configs = self.backup_configs.get("platform", {}).get('linux', {})
+
+    def prepare_windows(self):
+        backup_name = self.windows_configs.get('backup_name')
+        output_dir = Path(self.windows_configs.get('output_dir').expanduser().resolve())
+        include_private_keys = self.windows_configs.get('flags', {}).get('include_private_keys')
+        compress = self.windows_configs.get('flags', {}).get('compress')
+        output_tarball = self.windows_configs.get('flags', {}).get('output_tarball')
+        encrypt_backup = self.windows_configs.get('flags', {}).get('encrypt_backup')
+        targets = self.windows_configs.get('targets', {})
+        return backup_name, output_dir, include_private_keys, compress, output_tarball, encrypt_backup, targets
 
 
-manager = BackupManager(user_configs, backup_configs)
-print(manager.backup_dir, manager.compress, manager.include_private_keys, manager.output_tarball, manager.tarball_name, manager.encrypt_backup, manager.flags)
+    def prepare_linux(self):
+        pass
+
+
+class WinBack:
+
+    def __init__(self, backup_name:str, output_dir:Path, include_private_keys:bool, compress:bool, output_tarball:bool, encrypt_backup:bool, targets:dict):
+        log.info(f'Starting Windows backup utility...')
+        self.backup_name = backup_name
+        self.output_dir = output_dir
+        self.include_private_keys = include_private_keys
+        self.compress = compress
+        self.output_tarball = output_tarball
+        self.encrypt_backup = encrypt_backup
+        self.targets = targets
+
+    def hash_file(self, path:Path):
+        log.info(f"Hashing {path}...")
+        h = hashlib.new("sha256")
+        with open(path, 'rb') as f:
+            while chunk := f.read(8192):
+                h.update(chunk)
+        hash = h.hexdigest()
+        log.info(f"Hash: {hash}")
+        return hash
+
+    def create_empty_backup_dirs(self):
+        log.debug(f"Making backup directories...")
+        base_dir = Path(self.output_dir/self.backup_name).expanduser().resolve()
+        browser_data = base_dir/"browser_data"
+        credentials = base_dir/"credentials"
+        dotfiles = base_dir/"dotfiles"
+        configs = base_dir/"configs"
+        sysfiles = base_dir/"sysfiles"
+        usr_dirs = base_dir/"usr_dirs"
+        for d in [browser_data, credentials, dotfiles, configs, sysfiles, usr_dirs]:
+            d.mkdir(parents=True, exist_ok=True)
+        return {"browser_data":browser_data, "credentials":credentials, "dotfiles":dotfiles, "configs":configs, "sysfiles":sysfiles, "usr_dirs":usr_dirs}
+
+    def copy_items(self, items:list, dest_dir:Path, item_type:str):
+        results = []
+        for item in items:
+            raw = Path(item)
+            src = raw.expanduser().resolve()
+            if not src.exists():
+                log.warning(f"{item_type} not found: {src}")
+                continue
+            try:
+                dst = Path(dest_dir, src.name)
+                if src.is_dir():
+                    shutil.copytree(src, dst, dirs_exist_ok=True)
+                else:
+                    shutil.copy2(src, dst)
+                file_hash = self.hash_file(dst) if dst.is_file() else None
+                results.append({"source": str(src),
+                                "dest": str(dst),
+                                "hash": file_hash})
+                log.info(f"Copied {item_type}: {src} -> {dst}")
+            except Exception as e:
+                log.error(f"Failed to copy {item_type}: {src} - {e}")
+        return results
+
+    def write_manifest(self, manifest_data:dict, output_path:Path):
+        try:
+            with open(output_path, 'w') as f:
+                json.dump(manifest_data, f, indent=2)
+            log.info(f"Backup manifest written to: {output_path}")
+        except Exception as e:
+            log.error(f"Failed to write manifest: {e}")
+
+    def compress_backup(self, src:Path, dest:Path):
+
+        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M")
+        archive_name = f"{dest}/{self.backup_name}_{timestamp}"
+        archive_path = shutil.make_archive(str(archive_name), "gztar", root_dir=src)
+        log.info(f"Compressed backup to {archive_path}")
+        return archive_path
+
+    def backup(self):
+        backup_root = Path(self.output_dir/self.backup_name).expanduser().resolve()
+        with tempfile.TemporaryDirectory() as tmpdir:
+            staging_dir = Path(tmpdir)
+            subdirs = self.create_empty_backup_dirs(staging_dir)
+
+            credentials = self.targets.get('credentials', [])
+            configs = self.targets.get('configs', [])
+            dotfiles = self.targets.get('dotfiles', [])
+            sysfiles = self.targets.get('sysfiles', [])
+            usr_dirs = self.targets.get('usr_dirs', [])
+
+            copied_credentials = self.copy_items(credentials, subdirs['credentials'], 'credential')
+            copied_configs = self.copy_items(configs, subdirs['configs'], 'config')
+            copied_sysfiles = self.copy_items(sysfiles, subdirs['sysfiles'], 'system file')
+            copied_dotfiles = self.copy_items(dotfiles, subdirs['dotfiles'], 'dotfile')
+            copied_usr_dirs = self.copy_items(usr_dirs, subdirs['usr_dirs'], 'usr_dir')
+
+
+            manifest = {
+                "timestamp": datetime.datetime.now().isoformat(),
+                "credentials": copied_credentials,
+                "configs": copied_configs,
+                "sysfiles": copied_sysfiles,
+                "dotfiles": copied_dotfiles,
+                "usr_dirs": copied_usr_dirs
+            }
+
+            manifest_path = Path.joinpath(staging_dir, "backup_manifest.json")
+            self.write_manifest(manifest, manifest_path)
+
+            if self.compress and self.output_tarball:
+                self.compress_backup(staging_dir, backup_root)
+            else:
+                final_backup = backup_root/self.backup_name
+                shutil.copytree(staging_dir, final_backup, dirs_exist_ok=True)
+                log.info(f"Backup copied to {final_backup}")
