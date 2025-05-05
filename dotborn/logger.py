@@ -1,9 +1,9 @@
 import logging
 from pathlib import Path
 from rich.logging import RichHandler
-from dotborn import paths
+from dotborn.config import Configure
 
-def setup_logger(name:str=__name__, level=logging.DEBUG, verbose:bool=False, quiet=False, log_file: Path=paths.LOG_PATH) -> logging.Logger:
+def setup_logger(name:str=__name__, level=logging.DEBUG, verbose:bool=False, quiet=False, log_file: Path=Configure.LOG_PATH) -> logging.Logger:
     if quiet:
         level = logging.WARNING
     elif verbose:
