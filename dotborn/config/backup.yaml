@@ -54,5 +54,5 @@ backup_settings:
         sysfiles:
           - /etc/ssh/ssh_config
           - /etc/ssh/sshd_config
-        usr_dirs:
-          - None
+#        usr_dirs:
+#          - /path/to/usr/dir
