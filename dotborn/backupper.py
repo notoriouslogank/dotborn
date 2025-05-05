@@ -334,6 +334,9 @@ class WinBack:
         results = []
 
         for item in items:
+            if item == None:
+                print("None item")
+                pass
             if item != None:
                 raw = Path(item)
                 src = raw.expanduser().resolve()
