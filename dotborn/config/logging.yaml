@@ -1,0 +1,5 @@
+logging:
+  level: logging.DEBUG
+  log_to_file: true
+  rich_output: true
+  log_path: ./dotborn.log

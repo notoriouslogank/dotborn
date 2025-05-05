@@ -1,6 +1,6 @@
 import hashlib
 from pathlib import Path
-from utils.logger import setup_logger
+from dotborn.logger import setup_logger
 
 log = setup_logger()
 

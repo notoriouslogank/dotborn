@@ -1,0 +1,9 @@
+system_settings:
+  username: notoriouslogank
+  home_dir: /home/logank
+  flags:
+    dry_run: true
+    interactive: true
+    quiet: false
+    allow_sudo: true
+  install_profile: default
