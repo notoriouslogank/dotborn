@@ -11,7 +11,7 @@ backup_settings:
       targets:
         browser_data:
         credentials:
-          - "%USERPROFILE%/.ssh/id*"
+          - "%USERPROFILE%/.ssh/id_rsa"
         dotfiles:
           - "%USERPROFILE%/.bashrc"
           - "%USERPROFILE%/.wslconfig"
@@ -26,11 +26,18 @@ backup_settings:
         usr_dirs:
           - None
     linux:
-      enabled: true
-      output_dir: "~/dotborn_backup"
+      backup_name: dotborn_linux_backup
+      output_dir: "~"
+      flags:
+        include_private_keys: false
+        compress: false
+        output_tarball: false
+        encrypt_backup: false
       targets:
         browser_data:
           - ~/.mozilla/firefox
+        credentials:
+          - ~/.ssh/id_rsa
         dotfiles:
           - ~/.bashrc
           - ~/.gitconfig
@@ -47,3 +54,5 @@ backup_settings:
         sysfiles:
           - /etc/ssh/ssh_config
           - /etc/ssh/sshd_config
+        usr_dirs:
+          - None
