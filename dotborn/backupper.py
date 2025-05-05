@@ -21,13 +21,9 @@ def write_manifest(manifest_data:dict, output_path:Path):
         manifest_data (dict): Dictionary containing the list(s) of files backed up
         output_path (Path): Destination path for dotborn_manifest.json
     """
-    def make_serializable(obj):
-        if isinstance(obj, Path):
-            return str(obj)
-        return obj
     try:
         with open(output_path, "w") as f:
-            json.dump(manifest_data, f, indent=2)
+            json.dump(str(manifest_data), f, indent=2)
         log.info(f"Backup manifest written to: {output_path}")
     except Exception as e:
         log.error(f"Failed to write manifest: {e}")
@@ -100,7 +96,7 @@ class Backup:
                 manifest[key] = copied
 
             manifest_path = staging_dir/"backup_manifest.json"
-            write_manifest(str(manifest), manifest_path)
+            write_manifest(manifest, manifest_path)
 
             if self.compress and self.output_tarball:
                 return compress_backup(staging_dir, backup_root, self.backup_name)
