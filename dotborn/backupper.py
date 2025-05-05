@@ -78,8 +78,8 @@ class BackupManager:
         """
         backup_name = self.windows_configs.get("backup_name")
         output_dir = Path(self.windows_configs.get("output_dir"))
+        output_dir = Path(self.windows_configs.get("output_dir")).expanduser().resolve()
         print(output_dir)
-        output_dir = Path(self.windows_configs.get("output_dir").expanduser().resolve())
         include_private_keys = self.windows_configs.get("flags", {}).get(
             "include_private_keys"
         )
