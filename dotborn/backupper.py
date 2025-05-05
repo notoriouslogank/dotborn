@@ -21,6 +21,10 @@ def write_manifest(manifest_data:dict, output_path:Path):
         manifest_data (dict): Dictionary containing the list(s) of files backed up
         output_path (Path): Destination path for dotborn_manifest.json
     """
+    def make_serializable(obj):
+        if isinstance(obj, Path):
+            return str(obj)
+        return obj
     try:
         with open(output_path, "w") as f:
             json.dump(manifest_data, f, indent=2)
@@ -66,11 +70,9 @@ class Backup:
 
     def copy_items(self, items: Optional[List[str]], dest_dir:Path, item_type:str) -> List[Dict[str, str]]:
         results = []
-        if not items:
-            return results
         for item in items:
+            src = expand_safe(item)
             try:
-                src = expand_safe(item)
                 if not src.exists():
                     log.warning(f"{item_type} not found: {src}")
                     continue
@@ -98,7 +100,7 @@ class Backup:
                 manifest[key] = copied
 
             manifest_path = staging_dir/"backup_manifest.json"
-            write_manifest(manifest, manifest_path)
+            write_manifest(str(manifest), manifest_path)
 
             if self.compress and self.output_tarball:
                 return compress_backup(staging_dir, backup_root, self.backup_name)
