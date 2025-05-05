@@ -2,7 +2,7 @@ backup_settings:
   platform:
     windows:
       backup_name: dotborn_windows_backup
-      output_dir: "%USERPROFILE%"
+      output_dir: %USERPROFILE%
       flags:
         include_private_keys: false
         compress: false
