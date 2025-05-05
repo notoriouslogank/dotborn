@@ -33,10 +33,8 @@ def main():
         winback.backup()
     if platform == "Linux":
         linconfigs = backup_manager.prepare_linux()
-        # print(linconfigs)
         linback = LinBack(linconfigs)
         linback.backup()
-
         install_manager = InstallManager(configs.user_config, configs.install_config)
         apt_installer = AptInstaller(
             install_manager.apt_list,
