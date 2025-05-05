@@ -22,10 +22,10 @@ backup_settings:
         configs:
           - "%APPDATA%/Code/User/settings.json"
           - "~/.vscode/"
-        sysfiles:
-          - None
-        usr_dirs:
-          - None
+#        sysfiles:
+#          - /path/to/sysfile
+#        usr_dirs:
+#          - /path/to/usr/dir
     linux:
       backup_name: dotborn_linux_backup
       output_dir: "~"
