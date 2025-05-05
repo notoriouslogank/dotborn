@@ -23,18 +23,18 @@ def main():
     log.debug(f"dotborn {get_version()}")
 
     platform = platform_check.check_platform()
+    winback = WinBack(configs.backup_config)
+    linback = LinBack(configs.backup_config)
 
     log.debug(f"User platform: {platform}")
-    backup_manager = BackupManager(configs.user_config, configs.backup_config)
+
 
     if platform == "Windows":
-        winconfigs = backup_manager.prepare_windows()
-        winback = WinBack(winconfigs)
         winback.backup()
     if platform == "Linux":
-        linconfigs = backup_manager.prepare_linux()
-        linback = LinBack(linconfigs)
         linback.backup()
+
+
         install_manager = InstallManager(configs.user_config, configs.install_config)
         apt_installer = AptInstaller(
             install_manager.apt_list,
