@@ -184,7 +184,7 @@ class LinBack:
         }
 
     def copy_items(self, items: list, dest_dir: Path, item_type: str) -> list[dict]:
-        """Copy each individual item in the item list to the destination directory and note its' type; return a list of all items copied.
+        """Copy each individual item in the item list to the destination directory and note its type; return a list of all items copied.
 
         Args:
             items (list): List of items to copy
@@ -321,7 +321,7 @@ class WinBack:
         }
 
     def copy_items(self, items: list, dest_dir: Path, item_type: str):
-        """Copy each individual item in the item list to the destination directory and note its' type; return a list of all items copied.
+        """Copy each individual item in the item list to the destination directory and note its type; return a list of all items copied.
 
         Args:
             items (list): List of items to copy
