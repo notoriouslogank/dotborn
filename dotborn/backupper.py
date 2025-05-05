@@ -334,8 +334,6 @@ class WinBack:
         results = []
         if items != None:
             for item in items:
-                print("None item")
-                pass
                 if item != None:
                     raw = Path(item)
                     src = raw.expanduser().resolve()
@@ -355,6 +353,8 @@ class WinBack:
                         log.info(f"Copied {item_type}: {src} -> {dst}")
                     except Exception as e:
                         log.error(f"Failed to copy {item_type}: {src} - {e}")
+                elif item == None:
+                    log.info(f"{items} not found.")
         return results
 
     def backup(self) -> str:
