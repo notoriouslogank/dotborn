@@ -1,7 +1,7 @@
 import sys  # these lines are for DEV ONLY and should be
 from pathlib import Path
 
-from dotborn import linback, logger, platform_check
+from dotborn import logger, platform_check
 from dotborn.backupper import BackupManager, WinBack
 from dotborn.installer import (AptInstaller, CargoInstaller, InstallManager,
                                ScriptInstaller)
