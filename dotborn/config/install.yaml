@@ -1,0 +1,66 @@
+install_settings:
+  method: copy
+  installed_by:
+    apt:
+      - asciinema
+      - bat
+      - bpytop
+      - build-essential
+      - cmatrix
+      - curl
+      - debianutils
+      - ffmpeg
+      - figlet
+      - git
+      - glances
+      - gnupg
+      - htop
+      - iftop
+      - lshw
+      - lsof
+      - lynx
+      - neofetch
+      - neovim
+      - net-tools
+      - nmap
+      - p7zip-fill
+      - python3-pip
+      - python3-venv
+      - ranger
+      - tmux
+      - toilet
+      - unzip
+      - vlc
+      - wget
+      - zip
+      - zsh
+    cargo:
+      - dua-cli
+      - watchexec-cli
+      - bottom
+      - ytop
+      - starship
+    script:
+      - fzf:
+          install: git clone https://github.com/junegunn/fzf.git ~/.fzf && ~/.fzf/install --all
+          description: Command-line fuzzy finder
+      - gh:
+          install: # TODO: Write gh install script
+          description: Command-line GitHub utility
+      - nerd-fonts:
+          install: # TODO: Write Nerd Font install script
+          fonts:
+            - Mononoki
+            - Hack
+            - JetBrainsMono
+          description: Patched fonts for glyph-friendly terminals
+      - oh-my-zsh:
+          install: curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh | sh
+          description: zsh customization framework
+  dotfile_options:
+    method: copy
+    overwrite_existing: true
+  post_install:
+    show_tips: true
+    reshell: true
+    run_script: # TODO: Write postinstall.sh script

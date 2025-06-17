@@ -1,0 +1,58 @@
+backup_settings:
+  platform:
+    windows:
+      backup_name: dotborn_windows_backup
+      output_dir: "~"
+      flags:
+        include_private_keys: false
+        compress: false
+        output_tarball: false
+        encrypt_backup: false
+      targets:
+        browser_data:
+          - "~/Mozilla/Firefox/Profiles"
+        credentials:
+          - "~/.ssh/id_rsa"
+        dotfiles:
+          - "~/.bashrc"
+          - "~/.wslconfig"
+          - "~/.gitconfig"
+          - "~/.gitignore_global"
+          - "~/.ssh/config"
+        configs:
+          - "%APPDATA%/Code/User/settings.json"
+          - "~/.vscode/"
+#        sysfiles:
+#          - /path/to/sysfile
+#        usr_dirs:
+#          - /path/to/usr/dir
+    linux:
+      backup_name: dotborn_linux_backup
+      output_dir: "~"
+      flags:
+        include_private_keys: true
+        compress: false
+        output_tarball: false
+        encrypt_backup: false
+      targets:
+        browser_data:
+          - ~/.mozilla/firefox
+        credentials:
+          - ~/.ssh/id_rsa
+        dotfiles:
+          - ~/.bashrc
+          - ~/.gitconfig
+          - ~/.tmux.conf
+          - ~/.zshrc
+        configs:
+          - ~/.config/bat
+          - ~/.config/htop
+          - ~/.config/nvim
+          - ~/.config/neofetch
+          - ~/.gh
+          - ~/.oh-my-zsh/themes/mimir.zsh-theme
+        sysfiles:
+          - /etc/ssh/ssh_config
+          - /etc/ssh/sshd_config
+#        usr_dirs:
+#          - /path/to/usr/dir

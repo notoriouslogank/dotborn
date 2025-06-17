@@ -1,38 +1,53 @@
-from dotborn.version import get_version
-import sys # these lines are for DEV ONLY and should be
+import sys
 from pathlib import Path
-sys.path.append(str(Path(__file__).parent.resolve()))           # fixed later per ChatGPT
-from dotborn import logger, paths, config, platform_check, linback, apt_installer
 
-log = logger.setup_logger(log_file=Path(paths.LOG_PATH))
+from dotborn import logger, platform_check
+from dotborn.backupper import WinBack, LinBack
+from dotborn.installer import (
+    AptInstaller,
+    CargoInstaller,
+    InstallManager,
+    ScriptInstaller,
+)
+from dotborn.version import get_version
+from dotborn.config import Configure
 
-conf = config.load_config()
+configs = Configure()
+
+sys.path.append(str(Path(__file__).parent.resolve()))  # fixed later per ChatGPT
+
+log = logger.setup_logger(log_file=Path(configs.LOG_PATH))
+
 
 def main():
-    log.debug(f"MAIN LOOP START")
-    print(f'Dotborn v{get_version()}')
-    exit()
+    log.debug(f"dotborn {get_version()}")
+
     platform = platform_check.check_platform()
 
+    log.debug(f"User platform: {platform}")
+
+
     if platform == "Windows":
-        print(f"Windows")
+        WinBack(configs.backup_config).run_backup()
     if platform == "Linux":
-        #linback.run_backup()
-        apt_installer.install_apt_packages(conf)
-        apt_installer.install_cargo_packages(conf)
-        apt_installer.install_script_packages(conf)
+        LinBack(configs.backup_config).run_backup()
+
+
+        install_manager = InstallManager(configs.user_config, configs.install_config)
+        apt_installer = AptInstaller(
+            install_manager.apt_list,
+            install_manager.flags)
+        cargo_installer = CargoInstaller(
+                install_manager.cargo_list,
+                install_manager.flags)
+        script_installer = ScriptInstaller(
+                install_manager.script_list,
+                install_manager.flags)
+        apt_installer.dry_run()
+        cargo_installer.dry_run()
+        script_installer.dry_run()
     else:
-        print(f"Some sort of Godless heathen")
+        log.debug(f"Unsupported platform: {platform}")
 
-
-    # backup
-    #print(backup.copy_windows_credentials())
-    #print(backup.copy_windows_browser_data())
-    #print(backup.copy_windows_ect())
-    #make_tempdir()
-    # install
-    # dotfiles
-    # post-install
-    #pass
 
 main()
